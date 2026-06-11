@@ -269,7 +269,7 @@ export class VolunteerScheduleService {
         "Event_ID_TABLE.Event_Start_Date",
         "Event_ID_TABLE.Event_End_Date",
         "Group_ID_TABLE.Group_Name",
-        "Group_ID_TABLE.Congregation_ID",
+        "Group_ID_TABLE_Congregation_ID_TABLE.Congregation_ID",
         "Group_ID_TABLE_Congregation_ID_TABLE.Congregation_Name",
       ].join(","),
       orderBy: "Event_ID_TABLE.Event_Start_Date ASC",
@@ -279,13 +279,21 @@ export class VolunteerScheduleService {
   }
 
   public async getHouseholdCongregationId(contactId: number): Promise<number | null> {
-    const rows = await this.mp!.getTableRecords<{ Congregation_ID: number | null }>({
+    const contactRows = await this.mp!.getTableRecords<{ Household_ID: number | null }>({
       table: "Contacts",
       filter: `Contact_ID = ${contactId}`,
-      select: "Household_ID_TABLE.Congregation_ID",
+      select: "Household_ID",
       top: 1,
     });
-    return rows.length > 0 ? (rows[0].Congregation_ID ?? null) : null;
+    const householdId = contactRows[0]?.Household_ID;
+    if (!householdId) return null;
+    const householdRows = await this.mp!.getTableRecords<{ Congregation_ID: number | null }>({
+      table: "Households",
+      filter: `Household_ID = ${householdId}`,
+      select: "Congregation_ID",
+      top: 1,
+    });
+    return householdRows[0]?.Congregation_ID ?? null;
   }
 
   /**
