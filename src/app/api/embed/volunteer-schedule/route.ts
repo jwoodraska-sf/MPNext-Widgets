@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
     );
 
     // Fetch all data in parallel; scheduling tables may 404 if API client lacks that role
-    const [scheduledPositions, openSchedulesRaw, unavailableDates, familyGroups] =
+    const [scheduledPositions, openSchedulesRaw, unavailableDates, familyGroups, householdCongregationId] =
       await Promise.all([
         svc.getScheduledPositions(participantIds, contactByParticipant).catch((e) => {
           console.warn("[volunteer-schedule] getScheduledPositions failed (check API client role):", e instanceof Error ? e.message : e);
@@ -66,6 +66,10 @@ export async function GET(req: NextRequest) {
         svc.getFamilyGroupMemberships(participantIds).catch((e) => {
           console.warn("[volunteer-schedule] getFamilyGroupMemberships failed:", e instanceof Error ? e.message : e);
           return [];
+        }),
+        svc.getHouseholdCongregationId(contactId).catch((e) => {
+          console.warn("[volunteer-schedule] getHouseholdCongregationId failed:", e instanceof Error ? e.message : e);
+          return null;
         }),
       ]);
 
@@ -128,6 +132,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(
       {
         family,
+        householdCongregationId,
         scheduledPositions,
         openSchedules,
         unavailableDates,

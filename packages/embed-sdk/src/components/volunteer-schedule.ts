@@ -54,6 +54,7 @@ interface OpenSchedule {
   Schedule_Name: string;
   Group_ID: number;
   Group_Name: string;
+  Congregation_ID: number | null;
   Congregation_Name: string;
   Accept_All_Assignments: boolean;
   Event_Title: string;
@@ -88,6 +89,7 @@ interface ScheduleGroupMembership {
 
 interface WidgetData {
   family: HouseholdMember[];
+  householdCongregationId: number | null;
   scheduledPositions: ScheduledPosition[];
   openSchedules: OpenSchedule[];
   unavailableDates: UnavailableDate[];
@@ -457,6 +459,8 @@ export class VolunteerScheduleWidget extends MPNextWidget {
     let schedules = d.openSchedules;
     if (this.showOnlyFamilyGroups) {
       schedules = schedules.filter((s) => s.familyInGroup);
+    } else if (d.householdCongregationId) {
+      schedules = schedules.filter((s) => s.Congregation_ID === d.householdCongregationId);
     }
 
     const hasOpenSlots = schedules.some((s) => s.roles.some((r) => r.unfilledCount > 0));
@@ -472,7 +476,7 @@ export class VolunteerScheduleWidget extends MPNextWidget {
         </div>
         ${schedules.length === 0 ? `
           <div class="vs-empty">
-            <p>${this.showOnlyFamilyGroups ? "No available opportunities found in your family's volunteer groups." : "No available volunteer opportunities found."}</p>
+            <p>${this.showOnlyFamilyGroups ? "No available opportunities found in your family's volunteer groups." : "No available volunteer opportunities found for your congregation."}</p>
           </div>` : ""}
         ${!hasOpenSlots && schedules.length > 0 ? `
           <div class="vs-empty"><p>All positions are currently filled.</p></div>` : ""}

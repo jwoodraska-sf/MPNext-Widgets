@@ -35,6 +35,7 @@ export interface ScheduleWithRoles {
   Schedule_Name: string;
   Group_ID: number;
   Group_Name: string;
+  Congregation_ID: number | null;
   Congregation_Name: string;
   Allow_Volunteer_Signup: boolean;
   Accept_All_Assignments: boolean;
@@ -243,6 +244,7 @@ export class VolunteerScheduleService {
       Schedule_Name: string;
       Group_ID: number;
       Group_Name: string;
+      Congregation_ID: number | null;
       Congregation_Name: string;
       Allow_Volunteer_Signup: boolean;
       Accept_All_Assignments: boolean;
@@ -267,12 +269,23 @@ export class VolunteerScheduleService {
         "Event_ID_TABLE.Event_Start_Date",
         "Event_ID_TABLE.Event_End_Date",
         "Group_ID_TABLE.Group_Name",
+        "Group_ID_TABLE.Congregation_ID",
         "Group_ID_TABLE_Congregation_ID_TABLE.Congregation_Name",
       ].join(","),
       orderBy: "Event_ID_TABLE.Event_Start_Date ASC",
       top: 100,
     });
     return rows;
+  }
+
+  public async getHouseholdCongregationId(contactId: number): Promise<number | null> {
+    const rows = await this.mp!.getTableRecords<{ Congregation_ID: number | null }>({
+      table: "Contacts",
+      filter: `Contact_ID = ${contactId}`,
+      select: "Household_ID_TABLE.Congregation_ID",
+      top: 1,
+    });
+    return rows.length > 0 ? (rows[0].Congregation_ID ?? null) : null;
   }
 
   /**
