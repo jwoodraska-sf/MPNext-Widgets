@@ -149,6 +149,18 @@ export const widgetCatalog: WidgetConfig[] = [
     events: ["invoicesLoaded", "invoiceSelected", "invoiceError"],
     implementationCode: `<next-my-invoices></next-my-invoices>`,
   },
+  {
+    slug: "volunteer-schedule",
+    tag: "next-volunteer-schedule",
+    title: "Volunteer Schedule",
+    description: "Family volunteer schedule management — view positions, accept/decline assignments for minor children, sign up for open roles, and manage unavailability.",
+    category: "Authenticated",
+    needsUserMenu: true,
+    needsMpWidgets: true,
+    attributes: {},
+    events: [],
+    implementationCode: `<next-volunteer-schedule></next-volunteer-schedule>`,
+  },
 ];
 
 export function getWidgetBySlug(slug: string): WidgetConfig | undefined {

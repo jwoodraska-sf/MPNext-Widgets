@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MPNext Volunteer Schedule Widget - Demo</title>
+  <script id="MPWidgets" src="__MP_BASE_URL__/widgets/dist/MPWidgets.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: #f9fafb;
+      color: #2D2926;
+    }
+    .page {
+      max-width: 1024px;
+      margin: 0 auto;
+      padding: 32px 16px;
+    }
+    .back-link {
+      display: inline-block;
+      margin-bottom: 16px;
+      color: #004C97;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link:hover { text-decoration: underline; }
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #004C97;
+      margin-bottom: 4px;
+    }
+    .description {
+      color: #6b7280;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    .tag-code {
+      display: inline-block;
+      font-size: 12px;
+      color: #9ca3af;
+      margin-bottom: 24px;
+    }
+    .space-y > * + * { margin-top: 24px; }
+    .demo-box {
+      min-height: 200px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+    }
+    .auth-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: #002855;
+      border-radius: 0;
+    }
+    .auth-header span {
+      color: white;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .auth-placeholder {
+      text-align: center;
+      padding: 40px;
+      color: #9ca3af;
+    }
+    .status {
+      padding: 12px 16px;
+      font-size: 14px;
+    }
+    .status.success { background: #d1fae5; color: #065f46; border-bottom: 1px solid #10b981; }
+    .status.error { background: #fee2e2; color: #991b1b; border-bottom: 1px solid #ef4444; }
+    .card {
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .card-header h3 { font-size: 14px; font-weight: 600; color: #002855; }
+    .clear-btn {
+      background: none;
+      border: none;
+      font-size: 12px;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .clear-btn:hover { background: #f3f4f6; }
+    .event-log {
+      background: #1f2937;
+      color: #10b981;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .event-entry {
+      margin-bottom: 8px;
+      padding: 8px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 4px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <a href="/" class="back-link">&larr; All Widgets</a>
+    <h1>Volunteer Schedule</h1>
+    <p class="description">Family volunteer schedule management — view assigned positions, sign up minor children, and manage unavailability.</p>
+    <code class="tag-code">&lt;next-volunteer-schedule&gt;</code>
+
+    <div class="space-y">
+      <div class="demo-box">
+        <div id="status"></div>
+
+        <div class="auth-header">
+          <span>Sign in to continue</span>
+          <next-user-menu mp-base-url="__MP_BASE_URL__" api-host="__API_HOST__"></next-user-menu>
+        </div>
+
+        <div id="widget-container" style="display:none; padding: 24px;">
+          <next-volunteer-schedule api-host="http://localhost:3000"></next-volunteer-schedule>
+        </div>
+        <div id="auth-placeholder" class="auth-placeholder">
+          Sign in above to load the volunteer schedule widget.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Event Log</h3>
+          <button class="clear-btn" onclick="document.getElementById('event-log').innerHTML=''">Clear</button>
+        </div>
+        <div id="event-log" class="event-log">
+          <div class="event-entry">Initializing widget...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { init } from "./src/index.ts";
+
+    const statusEl = document.getElementById("status");
+    const eventLog = document.getElementById("event-log");
+
+    function showStatus(message, type = "info") {
+      statusEl.className = `status ${type}`;
+      statusEl.innerHTML = message;
+    }
+
+    function logEvent(type, detail) {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = document.createElement("div");
+      entry.className = "event-entry";
+      entry.textContent = `${timestamp} - ${type}: ${typeof detail === "string" ? detail : JSON.stringify(detail, null, 2)}`;
+      eventLog.insertBefore(entry, eventLog.firstChild);
+    }
+
+    function buildSessionBody() {
+      const body = { wid: "volunteer-schedule" };
+      const mpToken = localStorage.getItem("mpp-widgets_AuthToken");
+      if (mpToken) body.mpUserToken = mpToken;
+      return body;
+    }
+
+    init({
+      tokenProvider: {
+        get: async () => {
+          logEvent("auth", "Fetching token...");
+          const body = buildSessionBody();
+          logEvent("auth", `mpUserToken present: ${!!body.mpUserToken}`);
+          try {
+            const res = await fetch("http://localhost:3000/api/embed/session", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (!res.ok) {
+              const error = await res.json();
+              throw new Error(error.error || "Token fetch failed");
+            }
+            const data = await res.json();
+            logEvent("auth", `Token received (expires in ${data.expiresIn}s)`);
+            showStatus("Connected — widget ready", "success");
+            return data.token;
+          } catch (error) {
+            showStatus(`Failed to connect: ${error.message}. Make sure Next.js is running on http://localhost:3000`, "error");
+            logEvent("error", error.message);
+            throw error;
+          }
+        },
+        refresh: async () => {
+          logEvent("auth", "Refreshing token...");
+          const res = await fetch("http://localhost:3000/api/embed/session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(buildSessionBody()),
+          });
+          const data = await res.json();
+          logEvent("auth", "Token refreshed");
+          return data.token;
+        },
+      },
+    });
+
+    // Show widget once MP auth token appears in localStorage
+    const widgetContainer = document.getElementById("widget-container");
+    const authPlaceholder = document.getElementById("auth-placeholder");
+
+    function checkAuth() {
+      const hasToken = !!localStorage.getItem("mpp-widgets_AuthToken");
+      if (hasToken) {
+        widgetContainer.style.display = "block";
+        authPlaceholder.style.display = "none";
+        logEvent("auth", "MP auth token detected — loading widget");
+        return true;
+      }
+      return false;
+    }
+
+    if (!checkAuth()) {
+      logEvent("info", "Waiting for sign-in via user menu...");
+      const poll = setInterval(() => {
+        if (checkAuth()) clearInterval(poll);
+      }, 1000);
+    }
+  </script>
+</body>
+</html>
