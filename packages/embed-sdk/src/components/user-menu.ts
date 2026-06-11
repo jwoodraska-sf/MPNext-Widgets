@@ -394,7 +394,8 @@ export class UserMenuWidget extends MPNextWidget {
       if (isNaN(expiryDate.getTime())) return;
       const msUntilExpiry = expiryDate.getTime() - Date.now();
       if (msUntilExpiry <= 0) {
-        void this.handleTokenExpiry();
+        // minimum delay prevents tight loop if server keeps returning null/past expiry
+        this.expiryTimer = setTimeout(() => void this.handleTokenExpiry(), 60_000);
         return;
       }
       this.expiryTimer = setTimeout(() => void this.handleTokenExpiry(), msUntilExpiry);
@@ -428,6 +429,8 @@ export class UserMenuWidget extends MPNextWidget {
           if (data.expiresAt) {
             const d = new Date(data.expiresAt * 1000);
             localStorage.setItem("mpp-widgets_ExpiresAfter", d.toString());
+          } else {
+            localStorage.removeItem("mpp-widgets_ExpiresAfter"); // prevent stale expired value from causing a loop
           }
           this.isRefreshingToken = false;
           this.scheduleExpiryTimer();
