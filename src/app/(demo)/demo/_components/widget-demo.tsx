@@ -44,11 +44,11 @@ export function WidgetDemo({
       // 2. Load SDK
       log("sdk", "Loading embed SDK...");
       await new Promise<void>((resolve, reject) => {
-        const existing = document.querySelector('script[src="/embed-sdk/next-embed.es.js"]');
+        const existing = document.querySelector('script[src="/embed-sdk/next-embed.js"]');
         if (existing) { setTimeout(resolve, 300); return; }
         const script = document.createElement("script");
         script.type = "module";
-        script.src = "/embed-sdk/next-embed.es.js";
+        script.src = "/embed-sdk/next-embed.js";
         script.onload = () => resolve();
         script.onerror = () => reject(new Error("Failed to load SDK"));
         document.head.appendChild(script);
